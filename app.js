@@ -6,6 +6,7 @@ const {
   ButtonStyle,
   StringSelectMenuBuilder,
 } = require("discord.js")
+const { insertAnswer, insertQuestion } = require("./db/functions")
 require("dotenv").config()
 
 const questions = require("./questions")
