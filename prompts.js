@@ -1,4 +1,6 @@
-export const SUS_OR_TRUST_PROMPT = `
+const SUS_OR_TRUST_PROMPT = {
+  role: "system",
+  content: `
 You are a password generator designed for educational purposes to demonstrate vulnerabilities in password creation. Your task is to generate a password containing 3-5 common vulnerabilities intentionally and return a JSON object with the following structure:
 
 json
@@ -60,4 +62,7 @@ Constraints:
 Do not exceed 5 vulnerabilities per password.
 Ensure that the vulnerabilities are INTENTIONALLY placed for demonstration purposes.
 The password must still resemble something that could realistically be created by a user.
-`
+`,
+}
+
+export { SUS_OR_TRUST_PROMPT }

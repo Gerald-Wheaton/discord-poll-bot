@@ -9,7 +9,10 @@ import { insertAnswer, insertQuestion } from "./db/functions"
 import questions from "./questions"
 import express, { json } from "express"
 import cors from "cors"
-import { passwordCommand, handlePasswordGeneration } from "./passwordGenerator"
+import {
+  handlePasswordGeneration,
+  handleVulnerabilityGuess,
+} from "./passwordGenerator"
 
 require("dotenv").config()
 
@@ -37,8 +40,20 @@ client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}`)
 })
 
-// POST endpoint
-app.post("/trigger-poll", async (req, res) => {
+client.on("interactionCreate", async (interaction) => {
+  if (interaction.commandName === "sus-or-trust") {
+    await handlePasswordGeneration(interaction)
+  } else if (
+    interaction.isButton() &&
+    interaction.customId.startsWith(`vulnGuess_`)
+  ) {
+    await handleVulnerabilityGuess(interaction)
+  }
+  // addtl. command handlers when I need them
+})
+
+// NEXTJS Front End POST endpoint
+/*app.post("/trigger-poll", async (req, res) => {
   console.log("TEH REQUEST FROM THE FRONT END: ", req.body)
   try {
     const testChannelId = req.body.channelId //process.env.CHANNEL_ID
@@ -125,5 +140,7 @@ client.on("messageCreate", (message) => {
   console.log(`User ${message.author.tag} replied: ${message.content}`)
   message.reply("Thank you for your response!")
 })
+
+*/
 
 client.login(process.env.BOT_TOKEN)
