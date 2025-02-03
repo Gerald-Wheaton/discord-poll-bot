@@ -1,15 +1,15 @@
 import { REST, Routes } from "discord.js"
-import { passwordCommand } from "./passwordGenerator.js"
+import { sneakinOrTweakin } from "./sneakinOrTweakin"
+import { susOrTrustCommand } from "./susOrTrust"
+import { quizBuilderCommand } from "./quizMe"
 import dotenv from "dotenv"
 
 dotenv.config()
 
 const commands = [
-  {
-    name: "ask",
-    description: "Ask a predefined question",
-  },
-  passwordCommand.toJSON(), // Convert the SlashCommandBuilder to JSON
+  sneakinOrTweakin.toJSON(),
+  susOrTrustCommand.toJSON(),
+  quizBuilderCommand.toJSON(),
 ]
 
 const rest = new REST({ version: "10" }).setToken(process.env.BOT_TOKEN)

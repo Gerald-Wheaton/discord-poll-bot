@@ -1,20 +1,71 @@
-const questions = [
-  {
-    id: 1,
-    type: "yes_no",
-    question: "Do you like Dhutch Malk?",
-  },
-  // {
-  //   id: 2,
-  //   type: "multiple_choice",
-  //   text: "What is your favorite kind of farmer?",
-  //   options: ["Bean", "Corn", "Bread", "Thomas"],
-  // },
-  // {
-  //   id: 3,
-  //   type: "long_answer",
-  //   text: "Describe the best place to get RAW MILK.",
-  // },
-]
+/*
 
-module.exports = questions
+{
+  type: "clickable" || "input",
+  image?: "string",
+  questions: [
+    // if clickable
+    {
+      type: "buttons" || "multiple_choice",
+      question: "string",
+      options: "string[]",
+    },
+
+    // if input
+    {
+      type: "long_answer" || "short_answer",
+      question: "string",
+    },
+  ],
+}
+
+*/
+
+// const TEST_QUIZ = {
+//   type: "clickable",
+//   image: "https://example.com/image1.png",
+//   questions: [
+//     {
+//       question: "What is your favorite color?",
+//       options: ["Red", "Blue", "Green", "Yellow"],
+//     },
+//     {
+//       question: "Pick your preferred mode of transportation.",
+//       options: ["Car", "Bicycle", "Bus", "Walking"],
+//     },
+//   ],
+// }
+
+// const TEST_QUIZ = {
+//   type: "clickable",
+//   title: "Programming Quiz",
+//   questions: [
+//     {
+//       type: "multiple_choice",
+//       question: "Which programming languages do you know?",
+//       options: ["JavaScript", "Python", "C++", "Java"],
+//     },
+//     {
+//       type: "multiple_choice",
+//       question: "Which social media platforms do you use?",
+//       options: ["Twitter", "Instagram", "Facebook", "TikTok"],
+//     },
+//   ],
+// }
+
+const quiz = {
+  type: "input",
+  title: "Science Quiz",
+  questions: [
+    {
+      type: "long_answer",
+      question: "Explain how gravity works in your own words.",
+    },
+    {
+      type: "short_answer",
+      question: "What is the capital of France?",
+    },
+  ],
+}
+
+export { quiz }
