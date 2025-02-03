@@ -1,15 +1,14 @@
-import {
-  Client,
-  GatewayIntentBits,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-} from "discord.js"
-import { insertAnswer, insertQuestion } from "./db/functions"
-import questions from "./questions"
+import { Client, GatewayIntentBits, MessageFlags } from "discord.js"
 import express, { json } from "express"
 import cors from "cors"
-import { passwordCommand, handlePasswordGeneration } from "./passwordGenerator"
+import {
+  handlePasswordGeneration,
+  handleVulnerabilityGuess,
+  handleVulnerabilityListSubmission,
+} from "./sneakinOrTweakin"
+import { handleSusOrTrustGeneration, handleSusOrTrustGuess } from "./susOrTrust"
+import { handleQuizMe, handleOpenQuizMe } from "./quizMe"
+import UpdateBubble from "./bubbleUpdate"
 
 require("dotenv").config()
 
@@ -25,6 +24,21 @@ const client = new Client({
   ],
 })
 
+const TEST_QUIZ = {
+  type: "input",
+  title: "Science Quiz",
+  questions: [
+    {
+      type: "long_answer",
+      question: "Explain how gravity works in your own words.",
+    },
+    {
+      type: "short_answer",
+      question: "What is the capital of France?",
+    },
+  ],
+}
+
 app.get("/", (req, res) => {
   res.send("Discord bot server is running!")
 })
@@ -37,93 +51,58 @@ client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}`)
 })
 
-// POST endpoint
-app.post("/trigger-poll", async (req, res) => {
-  console.log("TEH REQUEST FROM THE FRONT END: ", req.body)
-  try {
-    const testChannelId = req.body.channelId //process.env.CHANNEL_ID
-    const channel = await client.channels.fetch(testChannelId)
-
-    if (!channel || !channel.isTextBased()) {
-      return res.status(400).json({ error: "Channel not found or invalid!" })
-    }
-
-    req.body.questions.forEach((question) => {
-      if (question.type === "yes_no") {
-        const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId(`yes_${question.id}`)
-            .setLabel("Yes")
-            .setStyle(ButtonStyle.Success),
-          new ButtonBuilder()
-            .setCustomId(`no_${question.id}`)
-            .setLabel("No")
-            .setStyle(ButtonStyle.Danger)
-        )
-
-        channel.send({
-          content: question.question,
-          components: [row],
-        })
-      } else if (question.postType === "multiple_choice") {
-        const row = new ActionRowBuilder().addComponents(
-          new StringSelectMenuBuilder()
-            .setCustomId(`multiple_choice_${question.question}`)
-            .setPlaceholder("Select an option...")
-            .addOptions(
-              question.options.map((option) => ({
-                label: option,
-                value: option,
-              }))
-            )
-        )
-
-        channel.send({
-          content: question.question,
-          components: [row],
-        })
-      } else if (question.postType === "long_answer") {
-        channel.send(
-          `${question.question}\n\nPlease reply to this question in the chat.`
-        )
-      }
-    })
-
-    res.json({ success: true })
-  } catch (error) {
-    console.error("Error:", error)
-    res.status(500).json({ error: "Internal server error" })
-  }
-})
-
 client.on("interactionCreate", async (interaction) => {
-  try {
-    if (interaction.isButton()) {
-      const response = interaction.customId.split("_")[0].toUpperCase()
-      const user = interaction.user.tag
-      const answer = response
-      console.log(`User ${interaction.user.tag} responded: ${response}`)
-      insertAnswer(1, answer, user)
-      await interaction.reply({
-        content: `You selected: ${response}`,
-        ephemeral: true,
-      })
-    }
-  } catch (error) {
-    console.error("Error handling interaction:", error)
-    if (!interaction.replied) {
-      await interaction.reply({
-        content: "There was an error processing your interaction.",
-        ephemeral: true,
-      })
-    }
+  // -- Sneakin or Tweakin --
+  if (interaction.commandName === "sneakin-or-tweakin") {
+    await handlePasswordGeneration(interaction)
+  } else if (
+    interaction.isButton() &&
+    interaction.customId.startsWith(`vulnGuess_`)
+  ) {
+    await handleVulnerabilityGuess(interaction)
+  } else if (
+    interaction.isModalSubmit() &&
+    interaction.customId.startsWith("vulnListModal_")
+  ) {
+    await handleVulnerabilityListSubmission(interaction)
   }
-})
+  // -- Sus or trust --
+  else if (interaction.commandName === "sus-or-trust") {
+    await handleSusOrTrustGeneration(interaction)
+  } else if (
+    interaction.isButton() &&
+    interaction.customId.startsWith(`sot_`)
+  ) {
+    await handleSusOrTrustGuess(interaction)
+  }
+  // -- Quiz Builder --
+  else if (interaction.commandName === "quiz-me") {
+    await handleOpenQuizMe(interaction)
+  } else if (
+    interaction.isButton() &&
+    interaction.customId.startsWith("quizme_")
+  ) {
+    await handleQuizMe(interaction)
+  } else if (
+    interaction.isButton() &&
+    interaction.customId.startsWith("buttonPoll_")
+  ) {
+    const [_, option, poll_title] = interaction.customId.split("_")
 
-client.on("messageCreate", (message) => {
-  if (message.author.bot) return
-  console.log(`User ${message.author.tag} replied: ${message.content}`)
-  message.reply("Thank you for your response!")
+    await UpdateBubble(interaction.user.tag, poll_title, interaction.id)
+  } else if (
+    interaction.isModalSubmit() &&
+    interaction.customId.startsWith("modalPoll_")
+  ) {
+    const [_, poll_title] = interaction.customId.split("_")
+
+    await UpdateBubble(interaction.user.tag, poll_title, interaction.id)
+
+    await interaction.reply({
+      content: "✅ Your answers have been submitted successfully!",
+      flags: [MessageFlags.Ephemeral], // The response is only visible to the user
+    })
+  }
 })
 
 client.login(process.env.BOT_TOKEN)
